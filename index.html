@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Lab Maya Interaktif: 7 Benua di Dunia (Fase C / Kelas 6 SD)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        asia: '#FF5722',
+                        afrika: '#FFC107',
+                        amutara: '#4CAF50',
+                        amselatan: '#8BC34A',
+                        antartika: '#00BCD4',
+                        eropa: '#3F51B5',
+                        australia: '#9C27B0'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * {
+            user-select: none;
+            -webkit-user-select: none;
+            box-sizing: border-box;
+        }
+
+        body, html {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background-color: #0b1329;
+            color: #f8fafc;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        /* Aspect ratio container wrapper */
+        .app-viewport {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            background: radial-gradient(circle at 50% 20%, #1e293b 0%, #0b1329 100%);
+        }
+
+        /* Map styling */
+        .continent-path {
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            stroke: #1e293b;
+            stroke-width: 1.2;
+        }
+        .continent-path:hover, .continent-path.active {
+            filter: drop-shadow(0px 0px 10px rgba(255, 255, 255, 0.8));
+            stroke: #ffffff;
+            stroke-width: 2.5;
+            transform: translateY(-2px);
+        }
+
+        /* Scrollbar custom for inner tab containers */
+        .custom-scroll::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 4px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+
+        /* Glassmorphism utility */
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .glass-card-interactive {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.2s ease;
+        }
+        .glass-card-interactive:hover {
+            background: rgba(51, 65, 85, 0.8);
+            border-color: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+        }
+
+        /* Pulse glow animation */
+        @keyframes pulseGlow {
+            0%, 100% { transform: scale(1); opacity: 0.9; }
+            50% { transform: scale(1.05); opacity: 1; filter: drop-shadow(0 0 15px rgba(56, 189, 248, 0.6)); }
+        }
+        .animate-glow {
+            animation: pulseGlow 3s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="app-viewport">
+        <!-- SPLASH SCREEN -->
+        <div id="splash-screen" class="absolute inset-0 z-50 flex flex-col items-center justify-center bg-slate-950 p-6 text-center transition-opacity duration-500">
+            <div class="relative mb-6">
+                <div class="w-28 h-28 sm:w-36 sm:h-36 rounded-full bg-indigo-600/20 flex items-center justify-center border border-indigo-500/30 animate-glow">
+                    <svg class="w-16 h-16 sm:w-20 sm:h-20 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 002 2h1.5a2.5 2.5 0 002.5-2.5V11a2 2 0 012-2h1.054M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+            </div>
+
+            <h1 class="text-2xl sm:text-4xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-sky-300 to-indigo-400 mb-2">
+                Lab Maya: 7 Benua di Dunia
+            </h1>
+            <p class="text-xs sm:text-base text-slate-400 max-w-md mb-8">
+                Media Pembelajaran Interaktif IPAS Fase C (Kelas 6 SD). Jelajahi karakteristik, komparasi luas, dan kuis interaktif secara seru!
+            </p>
+
+            <!-- Loading Bar -->
+            <div id="loader-container" class="w-64 sm:w-80 bg-slate-800/80 rounded-full h-3 p-0.5 border border-slate-700/50 mb-4 overflow-hidden">
+                <div id="loader-bar" class="bg-gradient-to-r from-cyan-500 to-indigo-500 h-full rounded-full w-0 transition-all duration-100 ease-out"></div>
+            </div>
+            <p id="loader-text" class="text-xs font-mono text-cyan-400 mb-6">Memuat laboratorium... 0%</p>
+
+            <!-- Start Button -->
+            <button id="start-btn" onclick="mulaiPetualangan()" class="hidden px-8 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-sm sm:text-base rounded-full shadow-lg shadow-cyan-500/30 transform hover:scale-105 active:scale-95 transition-all duration-200">
+                🚀 Mulai Petualangan
+            </button>
+        </div>
+
+        <!-- HEADER & NAVBAR -->
+        <header class="h-[10%] min-h-[55px] max-h-[70px] glass-card px-3 sm:px-6 flex items-center justify-between z-20 border-b border-slate-700/50">
+            <div class="flex items-center space-x-2 sm:space-x-3">
+                <div class="p-1.5 bg-indigo-500/20 rounded-lg border border-indigo-500/30">
+                    <svg class="w-5 h-5 sm:w-6 sm:h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 002 2h1.5a2.5 2.5 0 002.5-2.5V11a2 2 0 012-2h1.054M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h2 class="text-xs sm:text-base font-bold text-white leading-tight">Lab Maya 7 Benua</h2>
+                    <p class="text-[10px] sm:text-xs text-cyan-400 font-medium">IPAS Fase C • Kelas 6 SD</p>
+                </div>
+            </div>
+
+            <!-- Navigation Tabs -->
+            <nav class="flex space-x-1 sm:space-x-2 bg-slate-900/60 p-1 rounded-xl border border-slate-800">
+                <button onclick="switchTab('teori')" id="tab-btn-teori" class="tab-btn px-2.5 sm:px-4 py-1.5 text-[11px] sm:text-xs font-semibold rounded-lg transition-all text-slate-400 hover:text-white">
+                    📖 Teori
+                </button>
+                <button onclick="switchTab('prosedur')" id="tab-btn-prosedur" class="tab-btn px-2.5 sm:px-4 py-1.5 text-[11px] sm:text-xs font-semibold rounded-lg transition-all text-slate-400 hover:text-white">
+                    📋 Prosedur
+                </button>
+                <button onclick="switchTab('simulasi')" id="tab-btn-simulasi" class="tab-btn px-2.5 sm:px-4 py-1.5 text-[11px] sm:text-xs font-semibold rounded-lg transition-all text-white bg-indigo-600 shadow-md">
+                    🗺️ Simulasi
+                </button>
+                <button onclick="switchTab('lkpd')" id="tab-btn-lkpd" class="tab-btn px-2.5 sm:px-4 py-1.5 text-[11px] sm:text-xs font-semibold rounded-lg transition-all text-slate-400 hover:text-white">
+                    ✍️ LKPD
+                </button>
+                <button onclick="switchTab('pengembang')" id="tab-btn-pengembang" class="tab-btn px-2.5 sm:px-4 py-1.5 text-[11px] sm:text-xs font-semibold rounded-lg transition-all text-slate-400 hover:text-white">
+                    👨‍🏫 Profil
+                </button>
+            </nav>
+        </header>
+
+        <!-- MAIN WORKSPACE CONTAINER -->
+        <main class="flex-1 relative overflow-hidden p-2 sm:p-4">
+
+            <!-- TAB 1: TEORI -->
+            <section id="tab-teori" class="tab-content hidden h-full w-full custom-scroll overflow-y-auto space-y-4 pr-1">
+                <div class="glass-card p-4 sm:p-6 rounded-2xl">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-base sm:text-xl font-bold text-cyan-400 flex items-center gap-2">
+                            <span>🌎</span> Konsep Dasar 7 Benua di Dunia
+                        </h3>
+                        <span class="text-xs bg-indigo-500/20 text-indigo-300 px-3 py-1 rounded-full border border-indigo-500/30">Materi IPAS Kelas 6</span>
+                    </div>
+                    <p class="text-xs sm:text-sm text-slate-300 leading-relaxed mb-4">
+                        <strong>Benua</strong> adalah daratan yang sangat luas yang berada di permukaan bumi. Bumi kita memiliki 7 benua utama yang dikelilingi oleh samudera luas. Setiap benua memiliki karakteristik unik berupa keanekaragaman iklim, bentang alam, flora, fauna, dan budaya masyarakatnya.
+                    </p>
+                </div>
+
+                <!-- Continents Summary Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3" id="teori-cards-container">
+                    <!-- Populated dynamically via JS -->
+                </div>
+            </section>
+
+            <!-- TAB 2: PROSEDUR -->
+            <section id="tab-prosedur" class="tab-content hidden h-full w-full custom-scroll overflow-y-auto pr-1">
+                <div class="glass-card p-5 sm:p-8 rounded-2xl space-y-6">
+                    <div class="border-b border-slate-700/60 pb-4">
+                        <h3 class="text-lg sm:text-2xl font-bold text-cyan-400 flex items-center gap-2">
+                            <span>📑</span> Prosedur Penggunaan Lab Maya
+                        </h3>
+                        <p class="text-xs sm:text-sm text-slate-400 mt-1">Ikuti panduan ini untuk mengoperasikan simulasi peta dan menyelesaikan tugas pembelajaran.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="glass-card-interactive p-4 rounded-xl flex flex-col space-y-2">
+                            <div class="w-8 h-8 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold text-sm border border-cyan-500/40">1</div>
+                            <h4 class="font-bold text-sm text-white">Eksplorasi Peta Interaktif</h4>
+                            <p class="text-xs text-slate-300 leading-relaxed">
+                                Buka tab <strong>Simulasi</strong>. Klik atau ketuk salah satu benua pada Peta Dunia SVG untuk menampilkan informasi detail lengkap benua tersebut.
+                            </p>
+                        </div>
+
+                        <div class="glass-card-interactive p-4 rounded-xl flex flex-col space-y-2">
+                            <div class="w-8 h-8 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-sm border border-amber-500/40">2</div>
+                            <h4 class="font-bold text-sm text-white">Fitur Komparasi Benua</h4>
+                            <p class="text-xs text-slate-300 leading-relaxed">
+                                Gunakan menu <strong>Bandingkan 2 Benua</strong> di panel simulasi. Pilih Benua A dan Benua B untuk membandingkan grafik Luas Wilayah dan Populasi secara mendalam.
+                            </p>
+                        </div>
+
+                        <div class="glass-card-interactive p-4 rounded-xl flex flex-col space-y-2">
+                            <div class="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm border border-emerald-500/40">3</div>
+                            <h4 class="font-bold text-sm text-white">Mengerjakan LKPD</h4>
+                            <p class="text-xs text-slate-300 leading-relaxed">
+                                Buka tab <strong>LKPD</strong> untuk menguji pemahamanmu. Jawab 5 soal interaktif dan dapatkan skor serta umpan balik langsung!
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="bg-indigo-950/50 border border-indigo-500/30 p-4 rounded-xl flex items-center space-x-3">
+                        <span class="text-2xl">💡</span>
+                        <p class="text-xs text-indigo-200">
+                            <strong>Tips Guru:</strong> Gunakan tombol <strong>Reset</strong> di bagian bawah simulasi jika ingin menghapus pilihan benua atau menyegarkan tampilan simulasi.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 3: SIMULASI (MAIN WORKSPACE) -->
+            <section id="tab-simulasi" class="tab-content h-full w-full flex flex-col lg:flex-row gap-3">
+                <!-- LEFT: Interactive SVG Map Canvas -->
+                <div class="lg:w-7/12 h-1/2 lg:h-full glass-card rounded-2xl p-3 flex flex-col justify-between relative overflow-hidden">
+                    <div class="flex items-center justify-between mb-1 z-10">
+                        <div class="flex items-center space-x-2">
+                            <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+                            <span class="text-xs font-semibold text-slate-200">Peta Benua Interaktif</span>
+                        </div>
+                        <div class="flex items-center gap-1 sm:gap-2">
+                            <button onclick="setMapFilter('all')" id="filter-all" class="px-2 py-0.5 text-[10px] sm:text-xs rounded-md bg-indigo-600 text-white font-medium">Semua</button>
+                            <button onclick="setMapFilter('luas')" id="filter-luas" class="px-2 py-0.5 text-[10px] sm:text-xs rounded-md bg-slate-800 text-slate-400 hover:text-white font-medium">Urut Luas</button>
+                            <button onclick="resetSimulasi()" class="px-2.5 py-0.5 text-[10px] sm:text-xs rounded-md bg-rose-600/80 hover:bg-rose-600 text-white font-medium flex items-center gap-1 transition">
+                                🔄 Reset
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- SVG MAP CONTAINER -->
+                    <div class="w-full flex-1 flex items-center justify-center relative my-auto">
+                        <svg viewBox="0 0 1000 500" class="w-full h-full max-h-[360px] drop-shadow-xl" id="svg-world-map">
+                            <!-- Background Ocean grid lines -->
+                            <defs>
+                                <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                                    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255, 255, 255, 0.03)" stroke-width="1"/>
+                                </pattern>
+                            </defs>
+                            <rect width="1000" height="500" fill="url(#grid)" rx="12"/>
+
+                            <!-- CONTINENT PATHS (Simplified Interactive Vector Geometries) -->
+                            <!-- AMERIKA UTARA -->
+                            <path id="path-amutara" class="continent-path fill-amutara"
+                                  d="M 120,60 L 260,50 L 320,110 L 280,180 L 230,220 L 210,210 L 190,160 L 120,150 L 80,110 Z M 160,30 L 220,30 L 200,45 Z"
+                                  onclick="selectContinent('amutara')">
+                            </path>
+                            <text x="180" y="110" fill="#ffffff" font-size="12" font-weight="bold" pointer-events="none" class="drop-shadow">AMERIKA UTARA</text>
+
+                            <!-- AMERIKA SELATAN -->
+                            <path id="path-amselatan" class="continent-path fill-amselatan"
+                                  d="M 230,225 L 320,240 L 350,300 L 300,410 L 260,430 L 240,350 L 220,270 Z"
+                                  onclick="selectContinent('amselatan')">
+                            </path>
+                            <text x="250" y="320" fill="#ffffff" font-size="12" font-weight="bold" pointer-events="none" class="drop-shadow">AMERIKA SELATAN</text>
+
+                            <!-- EROPA -->
+                            <path id="path-eropa" class="continent-path fill-eropa"
+                                  d="M 450,70 L 580,60 L 610,120 L 530,160 L 470,140 L 460,100 Z"
+                                  onclick="selectContinent('eropa')">
+                            </path>
+                            <text x="510" y="110" fill="#ffffff" font-size="12" font-weight="bold" pointer-events="none" class="drop-shadow">EROPA</text>
+
+                            <!-- AFRIKA -->
+                            <path id="path-afrika" class="continent-path fill-afrika"
+                                  d="M 450,155 L 570,150 L 620,220 L 580,340 L 510,360 L 460,280 L 430,200 Z M 625,290 L 640,290 L 635,330 L 620,320 Z"
+                                  onclick="selectContinent('afrika')">
+                            </path>
+                            <text x="500" y="240" fill="#ffffff" font-size="13" font-weight="bold" pointer-events="none" class="drop-shadow">AFRIKA</text>
+
+                            <!-- ASIA -->
+                            <path id="path-asia" class="continent-path fill-asia"
+                                  d="M 585,60 L 920,50 L 950,180 L 880,260 L 780,280 L 720,240 L 620,210 L 585,120 Z M 750,285 L 820,285 L 810,320 L 750,310 Z"
+                                  onclick="selectContinent('asia')">
+                            </path>
+                            <text x="730" y="140" fill="#ffffff" font-size="16" font-weight="bold" pointer-events="none" class="drop-shadow">ASIA</text>
+
+                            <!-- AUSTRALIA -->
+                            <path id="path-australia" class="continent-path fill-australia"
+                                  d="M 780,330 L 900,320 L 920,400 L 860,430 L 790,410 L 770,360 Z M 880,440 L 900,440 L 890,455 Z"
+                                  onclick="selectContinent('australia')">
+                            </path>
+                            <text x="815" y="375" fill="#ffffff" font-size="12" font-weight="bold" pointer-events="none" class="drop-shadow">AUSTRALIA</text>
+
+                            <!-- ANTARTIKA -->
+                            <path id="path-antartika" class="continent-path fill-antartika"
+                                  d="M 150,470 L 850,470 L 820,495 L 180,495 Z"
+                                  onclick="selectContinent('antartika')">
+                            </path>
+                            <text x="460" y="488" fill="#ffffff" font-size="11" font-weight="bold" pointer-events="none" class="drop-shadow">ANTARTIKA</text>
+                        </svg>
+                    </div>
+
+                    <!-- Continent Quick Selector Chips -->
+                    <div class="flex items-center justify-center gap-1 sm:gap-2 flex-wrap pt-2 border-t border-slate-800">
+                        <button onclick="selectContinent('asia')" class="px-2 py-1 text-[10px] sm:text-xs font-bold rounded bg-orange-600/30 text-orange-300 border border-orange-500/30 hover:bg-orange-500 hover:text-white transition">Asia</button>
+                        <button onclick="selectContinent('afrika')" class="px-2 py-1 text-[10px] sm:text-xs font-bold rounded bg-amber-600/30 text-amber-300 border border-amber-500/30 hover:bg-amber-500 hover:text-white transition">Afrika</button>
+                        <button onclick="selectContinent('amutara')" class="px-2 py-1 text-[10px] sm:text-xs font-bold rounded bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500 hover:text-white transition">Am. Utara</button>
+                        <button onclick="selectContinent('amselatan')" class="px-2 py-1 text-[10px] sm:text-xs font-bold rounded bg-lime-600/30 text-lime-300 border border-lime-500/30 hover:bg-lime-500 hover:text-white transition">Am. Selatan</button>
+                        <button onclick="selectContinent('antartika')" class="px-2 py-1 text-[10px] sm:text-xs font-bold rounded bg-cyan-600/30 text-cyan-300 border border-cyan-500/30 hover:bg-cyan-500 hover:text-white transition">Antartika</button>
+                        <button onclick="selectContinent('eropa')" class="px-2 py-1 text-[10px] sm:text-xs font-bold rounded bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500 hover:text-white transition">Eropa</button>
+                        <button onclick="selectContinent('australia')" class="px-2 py-1 text-[10px] sm:text-xs font-bold rounded bg-fuchsia-600/30 text-fuchsia-300 border border-fuchsia-500/30 hover:bg-fuchsia-500 hover:text-white transition">Australia</button>
+                    </div>
+                </div>
+
+                <!-- RIGHT: Detail Panel & Comparison Tool -->
+                <div class="lg:w-5/12 h-1/2 lg:h-full flex flex-col gap-3">
+                    <!-- DETAIL PANEL CARD -->
+                    <div class="glass-card rounded-2xl p-4 flex-1 flex flex-col justify-between custom-scroll overflow-y-auto">
+                        <div id="continent-detail-content">
+                            <div class="flex items-center justify-between border-b border-slate-700/80 pb-3 mb-3">
+                                <div>
+                                    <span id="detail-badge" class="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">Benua Terluas</span>
+                                    <h3 id="detail-title" class="text-xl sm:text-2xl font-black text-white mt-1">Benua Asia</h3>
+                                </div>
+                                <span id="detail-icon" class="text-3xl sm:text-4xl">🌏</span>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-2 mb-3">
+                                <div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-800">
+                                    <p class="text-[10px] text-slate-400 font-medium">Luas Wilayah</p>
+                                    <p id="detail-luas" class="text-xs sm:text-sm font-bold text-cyan-300">44.579.000 km²</p>
+                                </div>
+                                <div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-800">
+                                    <p class="text-[10px] text-slate-400 font-medium">Est. Populasi</p>
+                                    <p id="detail-populasi" class="text-xs sm:text-sm font-bold text-emerald-300">4,7 Miliar Jiwa</p>
+                                </div>
+                            </div>
+
+                            <div class="space-y-2 text-xs sm:text-sm">
+                                <div class="bg-slate-900/40 p-2.5 rounded-xl border border-slate-800/80">
+                                    <span class="text-slate-400 font-medium block text-[10px]">Puncak Tertinggi & Sungai Terpanjang:</span>
+                                    <p id="detail-bentang" class="text-slate-200 font-semibold text-xs mt-0.5">Mtn. Everest (8.848m) & S. Yangtze</p>
+                                </div>
+                                <div class="bg-slate-900/40 p-2.5 rounded-xl border border-slate-800/80">
+                                    <span class="text-slate-400 font-medium block text-[10px]">Flora & Fauna Khas:</span>
+                                    <p id="detail-fauna" class="text-slate-200 text-xs mt-0.5">Panda, Harimau Benggala, Komodo, Bunga Bangkai</p>
+                                </div>
+                                <div class="bg-slate-900/40 p-2.5 rounded-xl border border-slate-800/80">
+                                    <span class="text-slate-400 font-medium block text-[10px]">Karakteristik & Ikonik:</span>
+                                    <p id="detail-ciri" class="text-slate-300 text-xs leading-relaxed mt-0.5">Benua terbesar dan terpadat. Memiliki Tembok Besar China dan Pegunungan Himalaya.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- COMPARISON TOOL -->
+                    <div class="glass-card rounded-2xl p-3.5 h-auto flex flex-col justify-between">
+                        <h4 class="text-xs font-bold text-amber-400 flex items-center gap-1.5 mb-2">
+                            <span>⚖️</span> Fitur Komparasi Benua
+                        </h4>
+                        <div class="grid grid-cols-2 gap-2 mb-2">
+                            <div>
+                                <label class="text-[10px] text-slate-400 block mb-1">Benua A:</label>
+                                <select id="compare-a" onchange="updateComparison()" class="w-full bg-slate-900 border border-slate-700 rounded-lg text-xs p-1.5 text-white font-medium focus:ring-1 focus:ring-cyan-500 outline-none">
+                                    <option value="asia">Asia</option>
+                                    <option value="afrika">Afrika</option>
+                                    <option value="amutara">Amerika Utara</option>
+                                    <option value="amselatan">Amerika Selatan</option>
+                                    <option value="antartika">Antartika</option>
+                                    <option value="eropa">Eropa</option>
+                                    <option value="australia">Australia</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-[10px] text-slate-400 block mb-1">Benua B:</label>
+                                <select id="compare-b" onchange="updateComparison()" class="w-full bg-slate-900 border border-slate-700 rounded-lg text-xs p-1.5 text-white font-medium focus:ring-1 focus:ring-cyan-500 outline-none">
+                                    <option value="afrika" selected>Afrika</option>
+                                    <option value="asia">Asia</option>
+                                    <option value="amutara">Amerika Utara</option>
+                                    <option value="amselatan">Amerika Selatan</option>
+                                    <option value="antartika">Antartika</option>
+                                    <option value="eropa">Eropa</option>
+                                    <option value="australia">Australia</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Visual Bar Comparison -->
+                        <div class="space-y-1.5 bg-slate-950/50 p-2 rounded-xl border border-slate-800">
+                            <div class="text-[10px] text-slate-400 flex justify-between font-mono">
+                                <span>Perbandingan Luas Wilayah</span>
+                                <span id="comp-ratio-text">Asia > Afrika</span>
+                            </div>
+                            <div class="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden flex">
+                                <div id="bar-comp-a" class="bg-cyan-500 h-full transition-all duration-500" style="width: 60%"></div>
+                                <div id="bar-comp-b" class="bg-amber-500 h-full transition-all duration-500" style="width: 40%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 4: LKPD INTERAKTIF -->
+            <section id="tab-lkpd" class="tab-content hidden h-full w-full custom-scroll overflow-y-auto pr-1">
+                <div class="glass-card p-4 sm:p-6 rounded-2xl max-w-3xl mx-auto space-y-6">
+                    <div class="flex items-center justify-between border-b border-slate-700/80 pb-4">
+                        <div>
+                            <h3 class="text-lg sm:text-2xl font-black text-cyan-400">Lembar Kerja Peserta Didik (LKPD)</h3>
+                            <p class="text-xs text-slate-400">Jawablah pertanyaan di bawah ini berdasarkan eksplorasi simulasi.</p>
+                        </div>
+                        <div class="text-right bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-800">
+                            <span class="text-[10px] text-slate-400 block font-medium">SKOR ANDA</span>
+                            <span id="quiz-score" class="text-lg font-black text-emerald-400">0 / 100</span>
+                        </div>
+                    </div>
+
+                    <!-- Quiz Questions Container -->
+                    <div id="quiz-container" class="space-y-4">
+                        <!-- Populated dynamically via JS -->
+                    </div>
+
+                    <div class="flex items-center justify-between pt-4 border-t border-slate-800">
+                        <button onclick="resetQuiz()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs rounded-xl transition border border-slate-700">
+                            🔄 Ulangi Kuis
+                        </button>
+                        <button onclick="submitQuiz()" class="px-6 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold text-xs sm:text-sm rounded-xl shadow-lg shadow-emerald-500/20 transition">
+                            ✅ Periksa Jawaban
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 5: PENGEMBANG -->
+            <section id="tab-pengembang" class="tab-content hidden h-full w-full custom-scroll overflow-y-auto pr-1">
+                <div class="glass-card p-6 sm:p-8 rounded-2xl max-w-2xl mx-auto space-y-6">
+                    <div class="flex items-center space-x-4 border-b border-slate-700/80 pb-6">
+                        <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-cyan-500 to-indigo-600 flex items-center justify-center text-2xl font-black text-white shadow-lg border border-cyan-400/30">
+                            👨‍🏫
+                        </div>
+                        <div>
+                            <h3 class="text-xl sm:text-2xl font-black text-white">Tim Pengembang Lab Maya</h3>
+                            <p class="text-xs text-cyan-400 font-medium">Guru SD / Inovator Pembelajaran Digital SD</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                        <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800 space-y-1">
+                            <span class="text-slate-400 text-[10px] block">MATA PELAJARAN</span>
+                            <p class="font-bold text-slate-200">IPAS (Ilmu Pengetahuan Alam & Sosial)</p>
+                        </div>
+                        <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800 space-y-1">
+                            <span class="text-slate-400 text-[10px] block">TARGET FASE / KELAS</span>
+                            <p class="font-bold text-slate-200">Fase C (Kelas 6 Sekolah Dasar)</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900/40 p-4 rounded-xl border border-slate-800 space-y-2 text-xs">
+                        <h4 class="font-bold text-cyan-300">Capaian Pembelajaran (CP) / TP:</h4>
+                        <p class="text-slate-300 leading-relaxed">
+                            Peserta didik memahami letak dan kondisi geografis negara Indonesia serta hubungannya dengan karakteristik benua-benua di dunia melalui eksplorasi peta dunia dan komparasi geografis interaktif.
+                        </p>
+                    </div>
+
+                    <!-- Notes / Interactive Feedback box -->
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold text-slate-300 block">Catatan / Refleksi Guru & Siswa:</label>
+                        <textarea id="catatan-pengembang" rows="3" placeholder="Tuliskan catatan refleksi pembelajaran di sini..." class="w-full bg-slate-900/80 border border-slate-700 rounded-xl p-3 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"></textarea>
+                        <button onclick="saveNotes()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl transition">
+                            💾 Simpan Catatan Refleksi
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- AUDIO SYNTHESIS & JAVASCRIPT LOGIC -->
+    <script>
+        // WEB AUDIO API SYNTHESIZER (NO EXTERNAL MP3 DEPENDENCIES)
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'click') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, now);
+                osc.frequency.exponentialRampToValueAtTime(1200, now + 0.04);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+                osc.start(now);
+                osc.stop(now + 0.04);
+            } else if (type === 'start') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.exponentialRampToValueAtTime(800, now + 0.2);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                osc.start(now);
+                osc.stop(now + 0.2);
+            } else if (type === 'select') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.exponentialRampToValueAtTime(700, now + 0.08);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+                osc.start(now);
+                osc.stop(now + 0.08);
+            } else if (type === 'reset') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(500, now);
+                osc.frequency.exponentialRampToValueAtTime(200, now + 0.12);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+                osc.start(now);
+                osc.stop(now + 0.12);
+            } else if (type === 'correct') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(523.25, now); // C5
+                osc.frequency.setValueAtTime(659.25, now + 0.08); // E5
+                osc.frequency.setValueAtTime(783.99, now + 0.16); // G5
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            } else if (type === 'wrong') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(250, now);
+                osc.frequency.setValueAtTime(180, now + 0.1);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                osc.start(now);
+                osc.stop(now + 0.25);
+            }
+        }
+
+        // CONTINENT DATA STORE
+        const continentsData = {
+            asia: {
+                name: 'Benua Asia',
+                badge: 'Benua Terluas #1',
+                icon: '🌏',
+                luasNum: 44579000,
+                luasStr: '44.579.000 km²',
+                populasiNum: 4700000000,
+                populasiStr: '4,7 Miliar Jiwa',
+                bentang: 'Puncak Everest (8.848m) & Sungai Yangtze',
+                fauna: 'Panda, Harimau Benggala, Komodo, Orangutan',
+                ciri: 'Benua terbesar dan terpadat di dunia. Memiliki keanekaragaman budaya tinggi, Gurun Gobi, dan pegunungan tertinggi Himalaya.',
+                color: '#FF5722'
+            },
+            afrika: {
+                name: 'Benua Afrika',
+                badge: 'Benua Terluas #2',
+                icon: '🌍',
+                luasNum: 30370000,
+                luasStr: '30.370.000 km²',
+                populasiNum: 1400000000,
+                populasiStr: '1,4 Miliar Jiwa',
+                bentang: 'Gunung Kilimanjaro (5.895m) & Sungai Nil',
+                fauna: 'Singa, Gajah Afrika, Jerapah, Zebra, Rhinoceros',
+                ciri: 'Terkenal dengan Gurun Sahara (gurun panas terbesar) dan Sungai Nil (sungai terpanjang). Benua dengan sebutan Benua Hitam.',
+                color: '#FFC107'
+            },
+            amutara: {
+                name: 'Benua Amerika Utara',
+                badge: 'Benua Terluas #3',
+                icon: '🌎',
+                luasNum: 24709000,
+                luasStr: '24.709.000 km²',
+                populasiNum: 592000000,
+                populasiStr: '592 Juta Jiwa',
+                bentang: 'Gunung Denali (6.190m) & Sungai Mississippi',
+                fauna: 'Bison Amerika, Beruang Grizzly, Elang Botak',
+                ciri: 'Memiliki Danau-Danau Besar (Great Lakes), Grand Canyon, serta negara maju seperti Amerika Serikat dan Kanada.',
+                color: '#4CAF50'
+            },
+            amselatan: {
+                name: 'Benua Amerika Selatan',
+                badge: 'Benua Terluas #4',
+                icon: '🌎',
+                luasNum: 17840000,
+                luasStr: '17.840.000 km²',
+                populasiNum: 434000000,
+                populasiStr: '434 Juta Jiwa',
+                bentang: 'Gunung Aconcagua (6.961m) & Sungai Amazon',
+                fauna: 'Anakonda, Llama, Jaguar, Burung Kondor',
+                ciri: 'Memiliki Hutan Hujan Amazon (paru-paru dunia) dan Pegunungan Andes (pegunungan terpanjang di dunia).',
+                color: '#8BC34A'
+            },
+            antartika: {
+                name: 'Benua Antartika',
+                badge: 'Benua Terluas #5',
+                icon: '🇦🇶',
+                luasNum: 14000000,
+                luasStr: '14.000.000 km²',
+                populasiNum: 1000,
+                populasiStr: '±1.000 Peneliti (Non-permanen)',
+                bentang: 'Vinson Massif (4.892m) & Lapisan Es Abadi',
+                fauna: 'Penguin Tali Dagu, Anjing Laut Weddell, Paus Biru',
+                ciri: 'Benua terselatan, terdingin, dan tertutup es tebal. Tidak memiliki penduduk asli tetap, hanya stasiun riset ilmiah.',
+                color: '#00BCD4'
+            },
+            eropa: {
+                name: 'Benua Eropa',
+                badge: 'Benua Terluas #6',
+                icon: '🌍',
+                luasNum: 10180000,
+                luasStr: '10.180.000 km²',
+                populasiNum: 745000000,
+                populasiStr: '745 Juta Jiwa',
+                bentang: 'Gunung Elbrus (5.642m) & Sungai Volga',
+                fauna: 'Serigala Abu-abu, Rusa Kutub, Beruang Cokelat Eropa',
+                ciri: 'Sering disebut Benua Biru. Terhubung daratannya dengan Asia (Eurasia) yang dipisahkan oleh Pegunungan Ural.',
+                color: '#3F51B5'
+            },
+            australia: {
+                name: 'Benua Australia',
+                badge: 'Benua Terkecil #7',
+                icon: '🌏',
+                luasNum: 7692000,
+                luasStr: '7.692.000 km²',
+                populasiNum: 26000000,
+                populasiStr: '26 Juta Jiwa',
+                bentang: 'Gunung Kosciuszko (2.228m) & Sungai Murray',
+                fauna: 'Kangguru, Koala, Platypus, Dingo',
+                ciri: 'Benua terkecil di dunia yang sekaligus merupakan sebuah negara tunggal. Terkenal dengan Karang Penghalang Besar (Great Barrier Reef).',
+                color: '#9C27B0'
+            }
+        };
+
+        // LKPD QUIZ DATA
+        const quizQuestions = [
+            {
+                q: "1. Benua manakah yang memiliki wilayah paling luas dan jumlah populasi terbanyak di dunia?",
+                options: ["Benua Afrika", "Benua Asia", "Benua Amerika Utara", "Benua Eropa"],
+                answer: 1
+            },
+            {
+                q: "2. Hutan Hujan Amazon yang merupakan 'paru-paru dunia' terletak di benua...",
+                options: ["Amerika Selatan", "Afrika", "Australia", "Asia"],
+                answer: 0
+            },
+            {
+                q: "3. Benua yang tidak memiliki penduduk tetap dan hampir seluruh wilayahnya tertutup es adalah...",
+                options: ["Eropa", "Australia", "Antartika", "Amerika Utara"],
+                answer: 2
+            },
+            {
+                q: "4. Hewan khas seperti Kangguru dan Koala dapat ditemukan di benua...",
+                options: ["Asia", "Afrika", "Australia", "Eropa"],
+                answer: 2
+            },
+            {
+                q: "5. Pegunungan Ural merupakan batas alam yang memisahkan benua...",
+                options: ["Asia dan Eropa", "Afrika dan Asia", "Amerika Utara dan Selatan", "Eropa dan Afrika"],
+                answer: 0
+            }
+        ];
+
+        // APP INITIALIZATION & SPLASH SCREEN
+        window.onload = function() {
+            let progress = 0;
+            const loaderBar = document.getElementById('loader-bar');
+            const loaderText = document.getElementById('loader-text');
+            const startBtn = document.getElementById('start-btn');
+
+            const interval = setInterval(() => {
+                progress += Math.floor(Math.random() * 25) + 10;
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(interval);
+                    loaderBar.style.width = '100%';
+                    loaderText.innerText = 'Laboratorium Siap!';
+                    startBtn.classList.remove('hidden');
+                } else {
+                    loaderBar.style.width = progress + '%';
+                    loaderText.innerText = `Memuat laboratorium... ${progress}%`;
+                }
+            }, 120);
+
+            // Populate Theory Cards
+            renderTeoriCards();
+            // Populate Quiz
+            renderQuiz();
+            // Default selection
+            selectContinent('asia');
+        };
+
+        function mulaiPetualangan() {
+            playSound('start');
+            const splash = document.getElementById('splash-screen');
+            splash.style.opacity = '0';
+            setTimeout(() => {
+                splash.style.display = 'none';
+            }, 500);
+        }
+
+        // TAB SWITCHING LOGIC
+        function switchTab(tabId) {
+            playSound('click');
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-indigo-600', 'text-white', 'shadow-md');
+                btn.classList.add('text-slate-400');
+            });
+
+            document.getElementById('tab-' + tabId).classList.remove('hidden');
+            const activeBtn = document.getElementById('tab-btn-' + tabId);
+            activeBtn.classList.add('bg-indigo-600', 'text-white', 'shadow-md');
+            activeBtn.classList.remove('text-slate-400');
+        }
+
+        // RENDER THEORY CARDS
+        function renderTeoriCards() {
+            const container = document.getElementById('teori-cards-container');
+            container.innerHTML = '';
+
+            Object.keys(continentsData).forEach(key => {
+                const c = continentsData[key];
+                const card = document.createElement('div');
+                card.className = 'glass-card-interactive p-4 rounded-xl flex flex-col justify-between space-y-2 cursor-pointer';
+                card.onclick = () => { switchTab('simulasi'); selectContinent(key); };
+
+                card.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <span class="text-2xl">${c.icon}</span>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-800 text-cyan-300 border border-slate-700">${c.badge}</span>
+                    </div>
+                    <div>
+                        <h4 class="font-extrabold text-sm text-white">${c.name}</h4>
+                        <p class="text-[11px] text-slate-400">Luas: ${c.luasStr}</p>
+                    </div>
+                    <p class="text-[11px] text-slate-300 line-clamp-2 leading-relaxed">${c.ciri}</p>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // SELECT CONTINENT IN SIMULATION
+        let activeContinentKey = 'asia';
+
+        function selectContinent(key) {
+            playSound('select');
+            activeContinentKey = key;
+            const data = continentsData[key];
+
+            // Highlight Map Path
+            document.querySelectorAll('.continent-path').forEach(p => p.classList.remove('active'));
+            const activePath = document.getElementById('path-' + key);
+            if (activePath) activePath.classList.add('active');
+
+            // Update Details
+            document.getElementById('detail-title').innerText = data.name;
+            document.getElementById('detail-badge').innerText = data.badge;
+            document.getElementById('detail-icon').innerText = data.icon;
+            document.getElementById('detail-luas').innerText = data.luasStr;
+            document.getElementById('detail-populasi').innerText = data.populasiStr;
+            document.getElementById('detail-bentang').innerText = data.bentang;
+            document.getElementById('detail-fauna').innerText = data.fauna;
+            document.getElementById('detail-ciri').innerText = data.ciri;
+        }
+
+        // COMPARISON TOOL LOGIC
+        function updateComparison() {
+            playSound('click');
+            const keyA = document.getElementById('compare-a').value;
+            const keyB = document.getElementById('compare-b').value;
+
+            const itemA = continentsData[keyA];
+            const itemB = continentsData[keyB];
+
+            const total = itemA.luasNum + itemB.luasNum;
+            const pctA = Math.round((itemA.luasNum / total) * 100);
+            const pctB = 100 - pctA;
+
+            document.getElementById('bar-comp-a').style.width = pctA + '%';
+            document.getElementById('bar-comp-b').style.width = pctB + '%';
+
+            document.getElementById('comp-ratio-text').innerText = `${itemA.name.replace('Benua ', '')} (${pctA}%) vs ${itemB.name.replace('Benua ', '')} (${pctB}%)`;
+        }
+
+        function setMapFilter(type) {
+            playSound('click');
+            if (type === 'all') {
+                selectContinent('asia');
+            } else if (type === 'luas') {
+                selectContinent('asia'); // Largest
+            }
+        }
+
+        function resetSimulasi() {
+            playSound('reset');
+            selectContinent('asia');
+            document.getElementById('compare-a').value = 'asia';
+            document.getElementById('compare-b').value = 'afrika';
+            updateComparison();
+        }
+
+        // LKPD QUIZ LOGIC
+        function renderQuiz() {
+            const container = document.getElementById('quiz-container');
+            container.innerHTML = '';
+
+            quizQuestions.forEach((q, idx) => {
+                const qBox = document.createElement('div');
+                qBox.className = 'bg-slate-900/60 p-4 rounded-xl border border-slate-800 space-y-3';
+
+                let optionsHTML = '';
+                q.options.forEach((opt, optIdx) => {
+                    optionsHTML += `
+                        <label class="flex items-center space-x-2 text-xs sm:text-sm text-slate-300 p-2 rounded-lg bg-slate-800/40 hover:bg-slate-800 cursor-pointer transition border border-slate-700/50">
+                            <input type="radio" name="quiz-q-${idx}" value="${optIdx}" class="text-cyan-500 focus:ring-0">
+                            <span>${opt}</span>
+                        </label>
+                    `;
+                });
+
+                qBox.innerHTML = `
+                    <p class="font-bold text-xs sm:text-sm text-white">${q.q}</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        ${optionsHTML}
+                    </div>
+                `;
+                container.appendChild(qBox);
+            });
+        }
+
+        function submitQuiz() {
+            let correctCount = 0;
+            quizQuestions.forEach((q, idx) => {
+                const selected = document.querySelector(`input[name="quiz-q-${idx}"]:checked`);
+                if (selected && parseInt(selected.value) === q.answer) {
+                    correctCount++;
+                }
+            });
+
+            const score = (correctCount / quizQuestions.length) * 100;
+            document.getElementById('quiz-score').innerText = `${score} / 100`;
+
+            if (score >= 80) {
+                playSound('correct');
+            } else {
+                playSound('wrong');
+            }
+        }
+
+        function resetQuiz() {
+            playSound('reset');
+            renderQuiz();
+            document.getElementById('quiz-score').innerText = '0 / 100';
+        }
+
+        function saveNotes() {
+            playSound('click');
+            const note = document.getElementById('catatan-pengembang').value;
+            if (note.trim()) {
+                alert('Catatan refleksi berhasil disimpan dalam sesi lab maya!');
+            }
+        }
+    </script>
+</body>
+</html>
